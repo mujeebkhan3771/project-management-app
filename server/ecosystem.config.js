@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "project-management-app",
       script: "npm",
-      args: "ren dev",
+      args: "run dev",
       env: {
         NODE_ENV: "development",
       },

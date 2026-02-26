@@ -20,7 +20,6 @@ model User {
   username String   @unique
   profilePictureUrl String?
   teamId  Int?
-
   authoredTasks Task[] @relation("TaskAuthor")
   assignedTasks Task[] @relation("TaskAssignee")
   taskAssignments TaskAssignment[]
@@ -28,6 +27,11 @@ model User {
   comments      Comment[]
   team            Team?            @relation(fields: [teamId], references: [id])
 }
+
+
+
+
+
 
 model Team {
   id        Int      @id @default(autoincrement())

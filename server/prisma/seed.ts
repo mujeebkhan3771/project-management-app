@@ -1,58 +1,82 @@
 import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
+
 const prisma = new PrismaClient();
 
-async function deleteAllData(orderedFileNames: string[]) {
-  const modelNames = orderedFileNames.map((fileName) => {
-    const modelName = path.basename(fileName, path.extname(fileName));
-    return modelName.charAt(0).toUpperCase() + modelName.slice(1);
-  });
+async function resetDatabase() {
+  console.log("🧹 Resetting database...");
 
-  for (const modelName of modelNames) {
-    const model: any = prisma[modelName as keyof typeof prisma];
-    try {
-      await model.deleteMany({});
-      console.log(`Cleared data from ${modelName}`);
-    } catch (error) {
-      console.error(`Error clearing data from ${modelName}:`, error);
-    }
-  }
+  // IMPORTANT: Table names must match exactly PostgreSQL table names
+  await prisma.$executeRawUnsafe(`
+    TRUNCATE TABLE
+      "Comment",
+      "Attachment",
+      "TaskAssignment",
+      "Task",
+      "ProjectTeam",
+      "Project",
+      "User",
+      "Team"
+    RESTART IDENTITY CASCADE;
+  `);
+
+  console.log("✅ Database reset complete.");
 }
 
-async function main() {
+async function seedData() {
   const dataDirectory = path.join(__dirname, "seedData");
 
+  // Correct relational order
   const orderedFileNames = [
     "team.json",
     "project.json",
     "projectTeam.json",
     "user.json",
     "task.json",
+    "taskAssignment.json",
     "attachment.json",
     "comment.json",
-    "taskAssignment.json",
   ];
 
-  await deleteAllData(orderedFileNames);
+  console.log("🌱 Seeding new data...");
 
   for (const fileName of orderedFileNames) {
     const filePath = path.join(dataDirectory, fileName);
+
+    if (!fs.existsSync(filePath)) {
+      console.warn(`⚠️ File not found: ${fileName}`);
+      continue;
+    }
+
     const jsonData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
     const modelName = path.basename(fileName, path.extname(fileName));
-    const model: any = prisma[modelName as keyof typeof prisma];
 
     try {
-      for (const data of jsonData) {
-        await model.create({ data });
-      }
-      console.log(`Seeded ${modelName} with data from ${fileName}`);
+      // Use createMany for performance
+      await (prisma as any)[modelName].createMany({
+        data: jsonData,
+      });
+
+      console.log(`✅ Seeded ${modelName}`);
     } catch (error) {
-      console.error(`Error seeding data for ${modelName}:`, error);
+      console.error(`❌ Error seeding ${modelName}:`, error);
     }
   }
+
+  console.log("🎉 Seeding completed successfully!");
+}
+
+async function main() {
+  await resetDatabase();
+  await seedData();
 }
 
 main()
-  .catch((e) => console.error(e))
-  .finally(async () => await prisma.$disconnect());
+  .catch((error) => {
+    console.error("❌ Seed failed:", error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
