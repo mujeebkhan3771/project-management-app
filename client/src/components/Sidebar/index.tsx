@@ -34,7 +34,7 @@ const Sidebar = () => {
 
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector(
-    (state) => state.global.isSidebarCollapsed
+    (state) => state.global.isSidebarCollapsed,
   );
 
   const sidebarClassNames = `fixed flex flex-col h-[100%] justify-between shadow-xl 
@@ -64,7 +64,12 @@ const Sidebar = () => {
         </div>
         {/* Team */}
         <div className="flex items-center gap-5 border-y-[1.5px] border-gray-200 px-8 py-4 dark:border-gray-700">
-          <Image src="/logo.png" alt="Logo" width={40} height={40} />
+          <Image
+            src="https://vpc-s3-images-aws.s3.us-east-1.amazonaws.com/logo.png"
+            alt="Logo"
+            width={40}
+            height={40}
+          />
           <div>
             <h3 className="text-md font-bold tracking-wide dark:text-gray-200">
               MK TEAM
@@ -98,15 +103,15 @@ const Sidebar = () => {
           )}
         </button>
         {/* PROJECTS LIST */}
-        {showProjects && projects?.map((project) => ( 
-          <SidebarLink
-            key={project.id}
-            icon={Briefcase}
-            label={project.name}
-            href={`/projects/${project.id}`}
+        {showProjects &&
+          projects?.map((project) => (
+            <SidebarLink
+              key={project.id}
+              icon={Briefcase}
+              label={project.name}
+              href={`/projects/${project.id}`}
             />
-        ))}
-
+          ))}
 
         {/* PRIORITIES LINKS */}
         <button
@@ -137,11 +142,7 @@ const Sidebar = () => {
               label="Medium"
               href="/priority/medium"
             />
-            <SidebarLink
-              icon={AlertOctagon}
-              label="Low"
-              href="/priority/low"
-            />
+            <SidebarLink icon={AlertOctagon} label="Low" href="/priority/low" />
             <SidebarLink
               icon={Layers3}
               label="Backlog"
